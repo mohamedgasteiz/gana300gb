@@ -58,17 +58,25 @@ input:focus {
 }
 
 button {
-    background: #218838;
+    background: linear-gradient(135deg, #28a745, #218838);
     color: white;
-    padding: 10px 20px;
+    padding: 12px 20px;
     border: none;
     cursor: pointer;
     margin: 5px;
-    border-radius: 5px;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 button:hover {
-    background: #218838;
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    transform: scale(1.05);
+}
+
+button:active {
+    transform: scale(0.98);
 }
     </style>
     <meta charset="UTF-8">
