@@ -11,16 +11,19 @@
 }
 
 .container {
-    width: 60%;
+    width: 70%;
     margin: 50px auto;
     background: white;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
 }
 
-h2, h3 {
+h2{
     color: red;
+    }
+h3 {
+    color: green;
 }
 
 table {
@@ -36,12 +39,12 @@ th, td {
 }
 
 th {
-    background: aqua;
+    background: #007bff;
     color: black;
 }
 
 input {
-    width: 100%;
+    width: 90%;
     padding: 8px;
     border: 2px solid #007bff;
     border-radius: 5px;
@@ -52,9 +55,8 @@ input {
 }
 
 input:focus {
-    border-color: green;
-    box-shadow: 0 0 8px rgba(0, 91, 187, 0.5);
-};
+    border-color: #28a745;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
 }
 
 button {
@@ -95,7 +97,7 @@ button:active {
     <center>
 <h1>مرحبا بكم في صفحتي لحساب المعدل</h1>
     <h2>حساب المعدل الفصلي</h2>
-    
+    <h3>(سنة اولى ثانوي)</h3>
     <table>
         <thead>
             <tr>
@@ -114,51 +116,100 @@ button:active {
 
     <button onclick="calculateAverage()">حساب المعدل الفصلي</button>
     
-    <h3 id="finalAverage">المعدل الفصلي: --</h3>
+    <h2 id="finalAverage">المعدل الفصلي: --</h3>
 
-    <script>
-        // أسماء المواد
-        const subjects = ["رياضيات", "فيزياء", "اعلام الي", "علوم طبيعية", "عربية", "فرنسية", "إنجليزية","اجتماعيات", "تكنولوجيا", "تربية إسلامية", "تربية بدنية"];
+    <script>// أسماء المواد مع المعاملات المحددة مسبقًا
+const subjects = [
+    { name: "رياضيات", coefficient: 5 },
+    { name: "فيزياء", coefficient: 4 },
+    { name: "اعلام الي", coefficient: 2 },
+    { name: "علوم طبيعية", coefficient: 2},
+    { name: "عربية", coefficient: 3 },
+    { name: "فرنسية", coefficient: 2 },
+    { name: "إنجليزية", coefficient: 2 },
+    { name: "اجتماعيات", coefficient: 2 },
+    { name: "تكنولوجيا", coefficient: 2 },
+    { name: "تربية إسلامية", coefficient: 2 },
+    { name: "تربية بدنية", coefficient: 1 }
+];
 
-        // إنشاء الجدول تلقائيًا
-        const tableBody = document.getElementById("gradesTable");
+// إنشاء الجدول تلقائيًا
+const tableBody = document.getElementById("gradesTable");
 
-        subjects.forEach(subject => {
-            let row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${subject}</td>
-                <td><input type="number" min="0" max="20" class="grade"></td>
-                <td><input type="number" min="0" max="20" class="grade"></td>
-                <td><input type="number" min="0" max="20" class="grade"></td>
-                <td><input type="number" min="1" class="coefficient"></td>
-                <td class="subjectAverage">--</td>
-            `;
-            tableBody.appendChild(row);
-        });
+// تحميل العلامات المحفوظة إن وجدت
+let savedData = JSON.parse(localStorage.getItem("gradesData")) || {};
 
-        function calculateAverage() {
-            let totalWeightedSum = 0;
-            let totalCoefficient = 0;
+subjects.forEach(subject => {
+    let row = document.createElement("tr");
+    row.innerHTML = `
+        <td>${subject.name}</td>
+        <td><input type="number" min="0" max="20" class="grade" data-subject="${subject.name}" data-type="assignment"></td>
+        <td><input type="number" min="0" max="20" class="grade" data-subject="${subject.name}" data-type="assessment"></td>
+        <td><input type="number" min="0" max="20" class="grade" data-subject="${subject.name}" data-type="test"></td>
+        <td>${subject.coefficient}</td>
+        <td class="subjectAverage">--</td>
+    `;
+    tableBody.appendChild(row);
 
-            document.querySelectorAll("#gradesTable tr").forEach(row => {
-                let grades = row.querySelectorAll(".grade");
-                let coefficient = row.querySelector(".coefficient").value;
+    // تحميل العلامات المحفوظة إن وجدت
+    if (savedData[subject.name]) {
+        let inputs = row.querySelectorAll(".grade");
+        inputs[0].value = savedData[subject.name].assignment;
+        inputs[1].value = savedData[subject.name].assessment;
+        inputs[2].value = savedData[subject.name].test;
+    }
+});
 
-                let test = parseFloat(grades[2].value) || 0;
-                let assessment = parseFloat(grades[1].value) || 0;
-                let assignment = parseFloat(grades[0].value) || 0;
-                coefficient = parseFloat(coefficient) || 1;
+// حفظ العلامات عند الإدخال
+document.querySelectorAll(".grade").forEach(input => {
+    input.addEventListener("input", saveGrades);
+});
 
-                let subjectAverage = ((assignment + assessment + 2 * test) / 4) * coefficient;
-                row.querySelector(".subjectAverage").innerText = subjectAverage.toFixed(2);
+function saveGrades() {
+    let data = {};
 
-                totalWeightedSum += subjectAverage;
-                totalCoefficient += coefficient;
-            });
+    document.querySelectorAll("#gradesTable tr").forEach(row => {
+        let subject = row.cells[0].innerText;
+        let grades = row.querySelectorAll(".grade");
 
-            let finalAverage = totalWeightedSum / totalCoefficient;
-            document.getElementById("finalAverage").innerText = "المعدل الفصلي: " + finalAverage.toFixed(2);
-        }
+        data[subject] = {
+            assignment: grades[0].value || "",
+            assessment: grades[1].value || "",
+            test: grades[2].value || ""
+        };
+    });
+
+    localStorage.setItem("gradesData", JSON.stringify(data));
+}
+
+// حساب المعدل الفصلي
+function calculateAverage() {
+    let totalWeightedSum = 0;
+    let totalCoefficient = 0;
+
+    document.querySelectorAll("#gradesTable tr").forEach(row => {
+        let grades = row.querySelectorAll(".grade");
+        let coefficient = parseFloat(row.cells[4].innerText);
+
+        let test = parseFloat(grades[2].value) || 0;
+        let assessment = parseFloat(grades[1].value) || 0;
+        let assignment = parseFloat(grades[0].value) || 0;
+
+        let subjectAverage = ((assignment + assessment + 2 * test) / 4) * coefficient;
+        row.querySelector(".subjectAverage").innerText = subjectAverage.toFixed(2);
+
+        totalWeightedSum += subjectAverage;
+        totalCoefficient += coefficient;
+    });
+
+    let finalAverage = totalCoefficient > 0 ? (totalWeightedSum / totalCoefficient).toFixed(2) : "--";
+    document.getElementById("finalAverage").innerText = "المعدل الفصلي: " + finalAverage;
+
+    saveGrades(); // حفظ العلامات بعد الحساب
+}
+
+// تحميل البيانات تلقائيًا عند فتح الصفحة
+document.addEventListener("DOMContentLoaded", saveGrades);
     </script>
    
 <br><br>
@@ -168,3 +219,4 @@ All rights saved - 2025
 </center>
 </body>
 </html>
+
